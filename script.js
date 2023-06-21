@@ -1,85 +1,66 @@
-cy.visit("http://clips.vorwaerts-gmbh.de/VfE_html5.mp4");
+const video = document.querySelector('.viewer');
+const progress = document.querySelector('.progress__filled');
+const toggleButton = document.querySelector('.player__button');
+const volumeSlider = document.querySelector('input[name="volume"]');
+const playbackSpeedSlider = document.querySelector('input[name="playbackRate"]');
+const skipButtons = document.querySelectorAll('[data-skip]');
 
-cy.get("video")
-  .should("have.prop", "paused", true)
-  .and("have.prop", "ended", false)
-  .and("have.prop", "duration", 60.08);
+function togglePlay() {
+	if (video.paused) {
+		video.play();
+	}else{
+		video.pause();
+	}
+}
 
-cy.get(".wrapper div")
-  .should("exist") // Ensure the element exists
-  .then(($div) => {
-    // Perform further assertions or actions on the element if needed
-    // For example, you can check its text or other properties
-    // using Cypress commands or plain JavaScript assertions
-    expect($div.text()).to.include("Expected Text");
-  });
+function updateToggleButton() {
+	const icon = video.paused ? '►' : '❚ ❚';
+	toggleButton.innerContent = icon;
+}
 
-// // Get the necessary DOM elements
-// const player = document.querySelector('.player');
-// const video = player.querySelector('.viewer');
-// const progress = player.querySelector('.progress');
-// const progressBar = player.querySelector('.progress__filled');
-// const toggleButton = player.querySelector('.toggle');
-// const volumeSlider = player.querySelector('input[name="volume"]');
-// const playbackRateSlider = player.querySelector('input[name="playbackRate"]');
-// const skipButtons = player.querySelectorAll('[data-skip]');
+function handleVolumeChange() {
+	video.volume = volumeSlider.value;
+}
 
-// // Function to toggle play/pause
-// function togglePlay() {
-//   if (video.paused) {
-//     video.play();
-//   } else {
-//     video.pause();
-//   }
-// }
+function handlePlaybackSpeedChange() {
+	video.playbackRate = playbackSpeedSlider.value;
+}
 
-// // Function to update the play/pause button text
-// function updateButton() {
-//   const icon = video.paused ? '►' : '❚ ❚';
-//   toggleButton.textContent = icon;
-// }
+function handleSkip() {
+	const skipSeconds = parseFloat(this.dataset.skip);
+	video.currentTime += skipSeconds;
+}
 
-// // Function to handle volume change
-// function handleVolumeChange() {
-//   video.volume = volumeSlider.value;
-// }
+function handleProgress() {
+	const progressPercentage = (video.currentTime / video.duration) * 100;
+    progress.style.flexBasis = `${progressPercentage}%`;
+}
 
-// // Function to handle playback rate change
-// function handlePlaybackRateChange() {
-//   video.playbackRate = playbackRateSlider.value;
-// }
+function scrub(e) {
+  const scrubTime = (e.offsetX / progress.offsetWidth) * video.duration;
+  video.currentTime = scrubTime;
+}
 
-// // Function to skip the video by a specified duration
-// function skip() {
-//   const skipAmount = parseFloat(this.dataset.skip);
-//   video.currentTime += skipAmount;
-// }
+video.addEventListener('click', togglePlay);
+video.addEventListener('play', updateToggleButton);
+video.addEventListener('pause', updateToggleButton);
+video.addEventListener('timeUpdate', handleProgress);
 
-// // Function to update the progress bar
-// function updateProgress() {
-//   const progressPercentage = (video.currentTime / video.duration) * 100;
-//   progressBar.style.flexBasis = `${progressPercentage}%`;
-// }
+toggleButton.addEventListener('click', togglePlay);
 
-// // Event listeners
-// video.addEventListener('click', togglePlay);
-// video.addEventListener('play', updateButton);
-// video.addEventListener('pause', updateButton);
-// video.addEventListener('timeupdate', updateProgress);
+volumeSlider.addEventListener('input', handleVolumeChange);
 
-// toggleButton.addEventListener('click', togglePlay);
+playbackSpeedSlider.addEventListener('input', handlePlaybackSpeedChange);
 
-// volumeSlider.addEventListener('input', handleVolumeChange);
-// playbackRateSlider.addEventListener('input', handlePlaybackRateChange);
+skipButtons.forEach(button => button.addEventListener('click', handleSkip));
 
-// skipButtons.forEach(button => button.addEventListener('click', skip));
+let mousedown = false;
+progress.addEventListener('click', scrub);
+progress.addEventListener('mousemove', (e) => mousedown && scrub(e));
+progress.addEventListener('mousedown', () => mousedown = true);
+progress.addEventListener('mouseup', () => mousedown = false);
 
-// progress.addEventListener('click', (e) => {
-//   const progressWidth = progress.offsetWidth;
-//   const clickX = e.offsetX;
-//   const seekTime = (clickX / progressWidth) * video.duration;
-//   video.currentTime = seekTime;
-// });
 
-// // Initial setup
-// updateButton();
+
+
+
